@@ -1,20 +1,66 @@
 import SwiftUI
+import ServiceManagement
 import KeyboardShortcuts
 
 struct SettingsView: View {
     var body: some View {
+        TabView {
+            GeneralTab()
+                .tabItem { Label("General", systemImage: "gear") }
+            KeyboardTab()
+                .tabItem { Label("Keyboard", systemImage: "keyboard") }
+            BrowsersTab()
+                .tabItem { Label("Browsers", systemImage: "globe") }
+        }
+        .frame(width: 380, height: 220)
+    }
+}
+
+// MARK: - General
+
+private struct GeneralTab: View {
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+
+    var body: some View {
         Form {
-            Section("Browsers") {
-                ForEach(SupportedBrowser.allCases) { browser in
-                    BrowserToggleRow(browser: browser)
+            Toggle("Launch at Login", isOn: $launchAtLogin)
+                .onChange(of: launchAtLogin) { _, newValue in
+                    do {
+                        if newValue {
+                            try SMAppService.mainApp.register()
+                        } else {
+                            try SMAppService.mainApp.unregister()
+                        }
+                    } catch {
+                        launchAtLogin = SMAppService.mainApp.status == .enabled
+                    }
                 }
-            }
-            Section("Shortcut") {
-                KeyboardShortcuts.Recorder("Hotkey:", name: .toggleMenu)
+        }
+        .padding()
+    }
+}
+
+// MARK: - Keyboard
+
+private struct KeyboardTab: View {
+    var body: some View {
+        Form {
+            KeyboardShortcuts.Recorder("Toggle Menu:", name: .toggleMenu)
+        }
+        .padding()
+    }
+}
+
+// MARK: - Browsers
+
+private struct BrowsersTab: View {
+    var body: some View {
+        Form {
+            ForEach(SupportedBrowser.allCases) { browser in
+                BrowserToggleRow(browser: browser)
             }
         }
         .padding()
-        .frame(width: 300)
     }
 }
 
