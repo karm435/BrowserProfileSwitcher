@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4882266E2F49586900A60093 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 488226612F49560000A60093 /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		488226422F49541A00A60093 /* ChromeProfile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChromeProfile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4882266E2F49586900A60093 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = ChromeProfile;
 			packageProductDependencies = (
+				488226612F49560000A60093 /* KeyboardShortcuts */,
 			);
 			productName = ChromeProfile;
 			productReference = 488226422F49541A00A60093 /* ChromeProfile.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 488226392F49541A00A60093;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				488226972F49596300A60093 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 488226432F49541A00A60093 /* Products */;
 			projectDirPath = "";
@@ -331,6 +340,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		488226972F49596300A60093 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		488226612F49560000A60093 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 488226972F49596300A60093 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4882263A2F49541A00A60093 /* Project object */;
 }
