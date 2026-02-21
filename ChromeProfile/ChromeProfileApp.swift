@@ -1,32 +1,34 @@
-//
-//  ChromeProfileApp.swift
-//  ChromeProfile
-//
-//  Created by Karmjit Singh on 21/2/2026.
-//
-
 import SwiftUI
-import SwiftData
 
 @main
 struct ChromeProfileApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var service = ChromeProfileService()
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Chrome Profiles", systemImage: "person.2.circle") {
+            if let error = service.errorMessage {
+                Text(error)
+                    .foregroundStyle(.secondary)
+            }
+
+            ForEach(service.profiles) { profile in
+                Button(profile.displayName) {
+                    service.openProfile(profile)
+                }
+            }
+
+            Divider()
+
+            Button("Refresh Profiles") {
+                service.loadProfiles()
+            }
+            .keyboardShortcut("r", modifiers: .command)
+
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q", modifiers: .command)
         }
-        .modelContainer(sharedModelContainer)
+        .menuBarExtraStyle(.menu)
     }
 }
