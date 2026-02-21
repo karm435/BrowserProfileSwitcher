@@ -24,14 +24,15 @@ struct ChromeProfileApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
-    private let service = ChromeProfileService()
+    private let service = BrowserProfileService()
     private var settingsWindow: NSWindow?
+    private var flatProfiles: [BrowserProfile] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "person.2.circle", accessibilityDescription: "Chrome Profiles")
+            button.image = NSImage(systemSymbolName: "person.2.circle", accessibilityDescription: "Browser Profiles")
         }
 
         let menu = NSMenu()
@@ -47,8 +48,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        flatProfiles = []
 
-        service.loadProfiles()
+        service.loadAllProfiles()
 
         if let error = service.errorMessage {
             let item = NSMenuItem(title: error, action: nil, keyEquivalent: "")
@@ -56,11 +58,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
 
-        for profile in service.profiles {
-            let item = NSMenuItem(title: profile.displayName, action: #selector(openProfile(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = profile
-            menu.addItem(item)
+        for (index, group) in service.profilesByBrowser.enumerated() {
+            if index > 0 || service.errorMessage != nil {
+                menu.addItem(.separator())
+            }
+
+            // Browser header
+            let header = NSMenuItem(title: group.browser.displayName, action: nil, keyEquivalent: "")
+            header.isEnabled = false
+            menu.addItem(header)
+
+            // Profiles
+            for profile in group.profiles {
+                let tag = flatProfiles.count
+                flatProfiles.append(profile)
+
+                let item = NSMenuItem(title: "  \(profile.displayName)", action: #selector(openProfile(_:)), keyEquivalent: "")
+                item.target = self
+                item.tag = tag
+                menu.addItem(item)
+            }
         }
 
         menu.addItem(.separator())
@@ -85,18 +102,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Actions
 
     @objc private func openProfile(_ sender: NSMenuItem) {
-        guard let profile = sender.representedObject as? ChromeProfile else { return }
-        service.openProfile(profile)
+        let tag = sender.tag
+        guard tag >= 0, tag < flatProfiles.count else { return }
+        service.openProfile(flatProfiles[tag])
     }
 
     @objc private func refreshProfiles() {
-        service.loadProfiles()
+        service.loadAllProfiles()
     }
 
     @objc private func openSettings() {
         if settingsWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 100),
+                contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
