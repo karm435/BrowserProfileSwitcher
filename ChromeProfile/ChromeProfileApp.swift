@@ -4,18 +4,18 @@ import KeyboardShortcuts
 // MARK: - KeyboardShortcuts name
 
 extension KeyboardShortcuts.Name {
-    static let toggleMenu = Self("toggleMenu", default: .init(.p, modifiers: [.command, .shift]))
+    static let toggleMenu = Self("toggleMenu", default: .init(.p, modifiers: [.command, .option]))
 
     // Cmd+Shift+1…9 for quick-launching profiles
-    static let profile1 = Self("profile1", default: .init(.one, modifiers: [.command, .shift]))
-    static let profile2 = Self("profile2", default: .init(.two, modifiers: [.command, .shift]))
-    static let profile3 = Self("profile3", default: .init(.three, modifiers: [.command, .shift]))
-    static let profile4 = Self("profile4", default: .init(.four, modifiers: [.command, .shift]))
-    static let profile5 = Self("profile5", default: .init(.five, modifiers: [.command, .shift]))
-    static let profile6 = Self("profile6", default: .init(.six, modifiers: [.command, .shift]))
-    static let profile7 = Self("profile7", default: .init(.seven, modifiers: [.command, .shift]))
-    static let profile8 = Self("profile8", default: .init(.eight, modifiers: [.command, .shift]))
-    static let profile9 = Self("profile9", default: .init(.nine, modifiers: [.command, .shift]))
+    static let profile1 = Self("profile1", default: .init(.one, modifiers: [.command, .option]))
+    static let profile2 = Self("profile2", default: .init(.two, modifiers: [.command, .option]))
+    static let profile3 = Self("profile3", default: .init(.three, modifiers: [.command, .option]))
+    static let profile4 = Self("profile4", default: .init(.four, modifiers: [.command, .option]))
+    static let profile5 = Self("profile5", default: .init(.five, modifiers: [.command, .option]))
+    static let profile6 = Self("profile6", default: .init(.six, modifiers: [.command, .option]))
+    static let profile7 = Self("profile7", default: .init(.seven, modifiers: [.command, .option]))
+    static let profile8 = Self("profile8", default: .init(.eight, modifiers: [.command, .option]))
+    static let profile9 = Self("profile9", default: .init(.nine, modifiers: [.command, .option]))
 
     static let profileShortcuts: [KeyboardShortcuts.Name] = [
         .profile1, .profile2, .profile3, .profile4, .profile5,
@@ -109,7 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let keyEquiv = tag < 9 ? "\(tag + 1)" : ""
                 let item = NSMenuItem(title: "  \(profile.displayName)", action: #selector(openProfile(_:)), keyEquivalent: keyEquiv)
                 if !keyEquiv.isEmpty {
-                    item.keyEquivalentModifierMask = [.command, .shift]
+                    item.keyEquivalentModifierMask = [.command, .option]
                 }
                 item.target = self
                 item.tag = tag
