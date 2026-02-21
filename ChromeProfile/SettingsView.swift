@@ -20,6 +20,7 @@ struct SettingsView: View {
 
 private struct GeneralTab: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var updateChecker = UpdateChecker()
 
     var body: some View {
         Form {
@@ -35,8 +36,42 @@ private struct GeneralTab: View {
                         launchAtLogin = SMAppService.mainApp.status == .enabled
                     }
                 }
+
+            Divider()
+
+            HStack {
+                Button("Check for Updates") {
+                    Task { await updateChecker.checkForUpdate() }
+                }
+                .disabled(updateChecker.status == .checking)
+
+                switch updateChecker.status {
+                case .idle:
+                    EmptyView()
+                case .checking:
+                    ProgressView()
+                        .controlSize(.small)
+                case .upToDate:
+                    Text("You're up to date!")
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
+                case .available(let version, let url):
+                    Text("v\(version) available —")
+                        .font(.callout)
+                    Link("Download", destination: url)
+                        .font(.callout)
+                case .error(let message):
+                    Text(message)
+                        .foregroundStyle(.red)
+                        .font(.callout)
+                        .lineLimit(1)
+                }
+            }
         }
         .padding()
+        .onReceive(NotificationCenter.default.publisher(for: .checkForUpdates)) { _ in
+            Task { await updateChecker.checkForUpdate() }
+        }
     }
 }
 

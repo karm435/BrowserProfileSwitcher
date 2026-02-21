@@ -129,6 +129,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settingsItem.target = self
         menu.addItem(settingsItem)
 
+        let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "u")
+        updateItem.keyEquivalentModifierMask = .command
+        updateItem.target = self
+        menu.addItem(updateItem)
+
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -146,6 +151,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func refreshProfiles() {
         service.loadAllProfiles()
+    }
+
+    @objc private func checkForUpdates() {
+        openSettings()
+        NotificationCenter.default.post(name: .checkForUpdates, object: nil)
     }
 
     @objc private func openSettings() {
