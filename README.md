@@ -1,4 +1,4 @@
-# Profile Switcher
+# Browser Profile Switcher
 
 A lightweight macOS menu bar app to quickly switch between browser profiles across multiple Chromium-based browsers.
 
@@ -14,8 +14,8 @@ A lightweight macOS menu bar app to quickly switch between browser profiles acro
 
 ## Installation
 
-1. Download `ProfileSwitcher.dmg` from the [latest release](https://github.com/karm435/BrowserProfileSwitcher/releases/latest)
-2. Open the DMG and drag **Profile Switcher** to your **Applications** folder
+1. Download `BrowserProfileSwitcher.dmg` from the [latest release](https://github.com/karm435/BrowserProfileSwitcher/releases/latest)
+2. Open the DMG and drag **Browser Profile Switcher** to your **Applications** folder
 3. Launch the app from Applications - it will appear in your menu bar
 
 ## Usage

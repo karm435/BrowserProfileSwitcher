@@ -94,13 +94,13 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: ${{ secrets.TEAM_ID }}
         run: |
-          APP_PATH="$RUNNER_TEMP/export/ChromeProfile.app"
+          APP_PATH="$RUNNER_TEMP/export/Browser Profile Switcher.app"
 
           # Create zip for notarization
-          ditto -c -k --keepParent "$APP_PATH" $RUNNER_TEMP/ChromeProfile-notarize.zip
+          ditto -c -k --keepParent "$APP_PATH" $RUNNER_TEMP/app-notarize.zip
 
           # Submit for notarization
-          xcrun notarytool submit $RUNNER_TEMP/ChromeProfile-notarize.zip \
+          xcrun notarytool submit $RUNNER_TEMP/app-notarize.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$TEAM_ID" \
@@ -111,23 +111,25 @@ jobs:
 
       - name: Create DMG
         run: |
-          APP_PATH="$RUNNER_TEMP/export/ChromeProfile.app"
-          DMG_PATH="$RUNNER_TEMP/ProfileSwitcher.dmg"
+          brew install create-dmg
 
-          # Create a temporary folder for DMG contents
-          mkdir -p $RUNNER_TEMP/dmg-content
-          cp -R "$APP_PATH" $RUNNER_TEMP/dmg-content/
-          ln -s /Applications $RUNNER_TEMP/dmg-content/Applications
+          APP_PATH="$RUNNER_TEMP/export/Browser Profile Switcher.app"
+          DMG_PATH="$RUNNER_TEMP/BrowserProfileSwitcher.dmg"
 
-          # Create DMG
-          hdiutil create -volname "Profile Switcher" \
-            -srcfolder $RUNNER_TEMP/dmg-content \
-            -ov -format UDZO \
-            "$DMG_PATH"
+          create-dmg \
+            --volname "Browser Profile Switcher" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 160 \
+            --icon "Browser Profile Switcher.app" 180 170 \
+            --app-drop-link 480 170 \
+            --hide-extension "Browser Profile Switcher.app" \
+            "$DMG_PATH" \
+            "$APP_PATH"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ runner.temp }}/ProfileSwitcher.dmg
+          files: ${{ runner.temp }}/BrowserProfileSwitcher.dmg
           generate_release_notes: true
           draft: false

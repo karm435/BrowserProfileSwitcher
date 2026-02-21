@@ -6,7 +6,7 @@ import KeyboardShortcuts
 extension KeyboardShortcuts.Name {
     static let toggleMenu = Self("toggleMenu", default: .init(.p, modifiers: [.command, .option]))
 
-    // Cmd+Shift+1…9 for quick-launching profiles
+    // Cmd+Option+1…9 for quick-launching profiles
     static let profile1 = Self("profile1", default: .init(.one, modifiers: [.command, .option]))
     static let profile2 = Self("profile2", default: .init(.two, modifiers: [.command, .option]))
     static let profile3 = Self("profile3", default: .init(.three, modifiers: [.command, .option]))
