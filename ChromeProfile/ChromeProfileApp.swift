@@ -45,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var flatProfiles: [BrowserProfile] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        service.requestAccessibilityIfNeeded()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {

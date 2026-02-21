@@ -19,6 +19,30 @@ enum SupportedBrowser: String, CaseIterable, Identifiable {
 
     var appName: String { displayName }
 
+    var binaryName: String {
+        switch self {
+        case .chrome:   "Google Chrome"
+        case .brave:    "Brave Browser"
+        case .edge:     "Microsoft Edge"
+        case .vivaldi:  "Vivaldi"
+        case .arc:      "Arc"
+        case .opera:    "Opera"
+        case .chromium: "Chromium"
+        }
+    }
+
+    var bundleIdentifier: String {
+        switch self {
+        case .chrome:   "com.google.Chrome"
+        case .brave:    "com.brave.Browser"
+        case .edge:     "com.microsoft.edgemac"
+        case .vivaldi:  "com.vivaldi.Vivaldi"
+        case .arc:      "company.thebrowser.Browser"
+        case .opera:    "com.operasoftware.Opera"
+        case .chromium: "org.chromium.Chromium"
+        }
+    }
+
     var localStatePath: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let relative: String = switch self {
