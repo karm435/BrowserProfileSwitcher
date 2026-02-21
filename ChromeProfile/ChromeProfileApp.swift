@@ -5,6 +5,22 @@ import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
     static let toggleMenu = Self("toggleMenu", default: .init(.p, modifiers: [.command, .shift]))
+
+    // Cmd+Shift+1…9 for quick-launching profiles
+    static let profile1 = Self("profile1", default: .init(.one, modifiers: [.command, .shift]))
+    static let profile2 = Self("profile2", default: .init(.two, modifiers: [.command, .shift]))
+    static let profile3 = Self("profile3", default: .init(.three, modifiers: [.command, .shift]))
+    static let profile4 = Self("profile4", default: .init(.four, modifiers: [.command, .shift]))
+    static let profile5 = Self("profile5", default: .init(.five, modifiers: [.command, .shift]))
+    static let profile6 = Self("profile6", default: .init(.six, modifiers: [.command, .shift]))
+    static let profile7 = Self("profile7", default: .init(.seven, modifiers: [.command, .shift]))
+    static let profile8 = Self("profile8", default: .init(.eight, modifiers: [.command, .shift]))
+    static let profile9 = Self("profile9", default: .init(.nine, modifiers: [.command, .shift]))
+
+    static let profileShortcuts: [KeyboardShortcuts.Name] = [
+        .profile1, .profile2, .profile3, .profile4, .profile5,
+        .profile6, .profile7, .profile8, .profile9,
+    ]
 }
 
 // MARK: - App
@@ -42,6 +58,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         KeyboardShortcuts.onKeyUp(for: .toggleMenu) { [weak self] in
             self?.statusItem.button?.performClick(nil)
         }
+
+        registerProfileShortcuts()
+    }
+
+    private func registerProfileShortcuts() {
+        for (index, name) in KeyboardShortcuts.Name.profileShortcuts.enumerated() {
+            KeyboardShortcuts.onKeyUp(for: name) { [weak self] in
+                self?.launchProfile(at: index)
+            }
+        }
+    }
+
+    private func launchProfile(at index: Int) {
+        service.loadAllProfiles()
+        let allProfiles = service.profilesByBrowser.flatMap(\.profiles)
+        guard index < allProfiles.count else { return }
+        service.openProfile(allProfiles[index])
     }
 
     // MARK: NSMenuDelegate
@@ -73,7 +106,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let tag = flatProfiles.count
                 flatProfiles.append(profile)
 
-                let item = NSMenuItem(title: "  \(profile.displayName)", action: #selector(openProfile(_:)), keyEquivalent: "")
+                let keyEquiv = tag < 9 ? "\(tag + 1)" : ""
+                let item = NSMenuItem(title: "  \(profile.displayName)", action: #selector(openProfile(_:)), keyEquivalent: keyEquiv)
+                if !keyEquiv.isEmpty {
+                    item.keyEquivalentModifierMask = [.command, .shift]
+                }
                 item.target = self
                 item.tag = tag
                 menu.addItem(item)
@@ -114,7 +151,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openSettings() {
         if settingsWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 380, height: 260),
+                contentRect: NSRect(x: 0, y: 0, width: 400, height: 420),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false

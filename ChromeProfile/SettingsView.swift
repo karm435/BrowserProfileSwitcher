@@ -12,7 +12,7 @@ struct SettingsView: View {
             BrowsersTab()
                 .tabItem { Label("Browsers", systemImage: "globe") }
         }
-        .frame(width: 380, height: 220)
+        .frame(width: 400, height: 380)
     }
 }
 
@@ -45,7 +45,14 @@ private struct GeneralTab: View {
 private struct KeyboardTab: View {
     var body: some View {
         Form {
-            KeyboardShortcuts.Recorder("Toggle Menu:", name: .toggleMenu)
+            Section("Menu") {
+                KeyboardShortcuts.Recorder("Toggle Menu:", name: .toggleMenu)
+            }
+            Section("Profiles") {
+                ForEach(Array(KeyboardShortcuts.Name.profileShortcuts.enumerated()), id: \.offset) { index, name in
+                    KeyboardShortcuts.Recorder("Profile \(index + 1):", name: name)
+                }
+            }
         }
         .padding()
     }
