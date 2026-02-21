@@ -50,3 +50,7 @@ All shortcuts are customizable in Settings > Keyboard.
 3. Build and run (Cmd+R)
 
 The project uses [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) as its only dependency, which is resolved automatically via Swift Package Manager.
+
+## License
+
+This project is proprietary software. Redistribution, modification, and commercial use require prior written permission. See [LICENSE](LICENSE) for details.
