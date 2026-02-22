@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		488226422F49541A00A60093 /* ChromeProfile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = ChromeProfile.app; path = "Browser Profile Switcher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		488226422F49541A00A60093 /* Browser Profile Switcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Browser Profile Switcher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		488226432F49541A00A60093 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				488226422F49541A00A60093 /* ChromeProfile.app */,
+				488226422F49541A00A60093 /* Browser Profile Switcher.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 				488226612F49560000A60093 /* KeyboardShortcuts */,
 			);
 			productName = ChromeProfile;
-			productReference = 488226422F49541A00A60093 /* ChromeProfile.app */;
+			productReference = 488226422F49541A00A60093 /* Browser Profile Switcher.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -262,7 +262,7 @@
 				CODE_SIGN_ENTITLEMENTS = ChromeProfile/ChromeProfile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = TWUTEK8LCV;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -298,7 +298,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = TWUTEK8LCV;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
