@@ -63,13 +63,23 @@ final class BrowserProfileService {
         }
     }
 
-    /// Checks whether the app has Accessibility permission and prompts if not.
+    /// Whether the Accessibility API is currently available.
+    var isAccessibilityGranted: Bool { AXIsProcessTrusted() }
+
+    /// Prompts for Accessibility permission once. Subsequent launches only log
+    /// a warning so the user isn't nagged with the system dialog every time.
     func requestAccessibilityIfNeeded() {
         let trusted = AXIsProcessTrusted()
         logger.info("Accessibility trusted: \(trusted)")
-        if !trusted {
+        guard !trusted else { return }
+
+        let hasPrompted = UserDefaults.standard.bool(forKey: "hasPromptedAccessibility")
+        if !hasPrompted {
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
             AXIsProcessTrustedWithOptions(options)
+            UserDefaults.standard.set(true, forKey: "hasPromptedAccessibility")
+        } else {
+            logger.warning("Accessibility not granted — user must enable in System Settings → Privacy & Security → Accessibility")
         }
     }
 
@@ -104,6 +114,10 @@ final class BrowserProfileService {
         logger.info("Switching to profile via Accessibility: \(profile.displayName)")
         app.activate()
 
+        // Give the browser time to become the frontmost app so its menu bar
+        // is available to the Accessibility API.
+        Thread.sleep(forTimeInterval: 0.3)
+
         if clickProfileMenuItem(pid: app.processIdentifier, profileName: profile.displayName) {
             logger.info("Profile menu click succeeded")
             return
@@ -120,23 +134,28 @@ final class BrowserProfileService {
     /// (or "People") menu bar item.  Requires Accessibility permission.
     private func clickProfileMenuItem(pid: pid_t, profileName: String) -> Bool {
         guard AXIsProcessTrusted() else {
-            logger.info("Accessibility not granted — prompting user")
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
+            logger.warning("Accessibility not granted — cannot switch profiles via menu")
             return false
         }
 
         let appElement = AXUIElementCreateApplication(pid)
 
-        // --- Get the menu bar ---
+        // --- Get the menu bar (retry a few times while the app activates) ---
         var menuBarRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(appElement, kAXMenuBarAttribute as CFString, &menuBarRef) == .success else {
-            logger.error("AX: could not get menu bar")
+        for attempt in 1...3 {
+            if AXUIElementCopyAttributeValue(appElement, kAXMenuBarAttribute as CFString, &menuBarRef) == .success {
+                break
+            }
+            logger.info("AX: menu bar not ready, retry \(attempt)/3")
+            usleep(200_000) // 200 ms
+        }
+        guard let menuBar = menuBarRef else {
+            logger.error("AX: could not get menu bar after retries")
             return false
         }
 
         var itemsRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(menuBarRef as! AXUIElement, kAXChildrenAttribute as CFString, &itemsRef) == .success,
+        guard AXUIElementCopyAttributeValue(menuBar as! AXUIElement, kAXChildrenAttribute as CFString, &itemsRef) == .success,
               let menuBarItems = itemsRef as? [AXUIElement] else {
             logger.error("AX: could not get menu bar items")
             return false
@@ -160,7 +179,7 @@ final class BrowserProfileService {
 
             // Open the menu so its children become available.
             AXUIElementPerformAction(menuBarItem, kAXPressAction as CFString)
-            usleep(150_000) // 150 ms for the menu to populate
+            usleep(250_000) // 250 ms for the menu to populate
 
             // The menu bar item's child is the menu itself.
             var subRef: CFTypeRef?
@@ -186,20 +205,21 @@ final class BrowserProfileService {
             }
             logger.info("AX \(title) menu entries: \(entryNames.joined(separator: ", "))")
 
-            // Click the matching profile.
+            // Click the matching profile (case-insensitive, trimmed).
+            let needle = profileName.trimmingCharacters(in: .whitespaces).lowercased()
             for menuItem in menuItems {
                 var itemTitleRef: CFTypeRef?
                 AXUIElementCopyAttributeValue(menuItem, kAXTitleAttribute as CFString, &itemTitleRef)
-                let itemTitle = itemTitleRef as? String ?? ""
+                let itemTitle = (itemTitleRef as? String ?? "").trimmingCharacters(in: .whitespaces)
 
-                if itemTitle == profileName {
+                if itemTitle.lowercased() == needle {
                     AXUIElementPerformAction(menuItem, kAXPressAction as CFString)
                     return true
                 }
             }
 
             // Profile not found — dismiss the menu.
-            logger.info("Profile '\(profileName)' not in \(title) menu")
+            logger.info("Profile '\(profileName)' not in \(title) menu — entries were: \(entryNames)")
             AXUIElementPerformAction(menuBarItem, kAXCancelAction as CFString)
             return false
         }
