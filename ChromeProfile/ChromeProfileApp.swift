@@ -28,8 +28,10 @@ extension KeyboardShortcuts.Name {
 @main
 struct ChromeProfileApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    @Environment(\.openSettings) private var openSettings
 
     var body: some Scene {
+        let _ = (appDelegate.openSettingsAction = openSettings)
         Settings {
             SettingsView()
         }
@@ -41,8 +43,8 @@ struct ChromeProfileApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let service = BrowserProfileService()
-    private var settingsWindow: NSWindow?
     private var flatProfiles: [BrowserProfile] = []
+    var openSettingsAction: OpenSettingsAction?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         service.requestAccessibilityIfNeeded()
@@ -160,19 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func openSettings() {
-        if settingsWindow == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 400, height: 420),
-                styleMask: [.titled, .closable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "Settings"
-            window.contentViewController = NSHostingController(rootView: SettingsView())
-            window.center()
-            settingsWindow = window
-        }
-        settingsWindow?.makeKeyAndOrderFront(nil)
+        openSettingsAction?()
         NSApp.activate(ignoringOtherApps: true)
     }
 }

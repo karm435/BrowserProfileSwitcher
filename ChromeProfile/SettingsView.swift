@@ -24,50 +24,55 @@ private struct GeneralTab: View {
 
     var body: some View {
         Form {
-            Toggle("Launch at Login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    do {
-                        if newValue {
-                            try SMAppService.mainApp.register()
-                        } else {
-                            try SMAppService.mainApp.unregister()
+            Section("Startup") {
+                Toggle("Launch at Login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        do {
+                            if newValue {
+                                try SMAppService.mainApp.register()
+                            } else {
+                                try SMAppService.mainApp.unregister()
+                            }
+                        } catch {
+                            launchAtLogin = SMAppService.mainApp.status == .enabled
                         }
-                    } catch {
-                        launchAtLogin = SMAppService.mainApp.status == .enabled
                     }
-                }
+            }
 
-            Divider()
+            Section("Updates") {
+                HStack {
+                    Button("Check for Updates") {
+                        Task { await updateChecker.checkForUpdate() }
+                    }
+                    .disabled(updateChecker.status == .checking)
 
-            HStack {
-                Button("Check for Updates") {
-                    Task { await updateChecker.checkForUpdate() }
-                }
-                .disabled(updateChecker.status == .checking)
+                    Spacer()
 
-                switch updateChecker.status {
-                case .idle:
-                    EmptyView()
-                case .checking:
-                    ProgressView()
-                        .controlSize(.small)
-                case .upToDate:
-                    Text("You're up to date!")
-                        .foregroundStyle(.secondary)
-                        .font(.callout)
-                case .available(let version, let url):
-                    Text("v\(version) available —")
-                        .font(.callout)
-                    Link("Download", destination: url)
-                        .font(.callout)
-                case .error(let message):
-                    Text(message)
-                        .foregroundStyle(.red)
-                        .font(.callout)
-                        .lineLimit(1)
+                    switch updateChecker.status {
+                    case .idle:
+                        EmptyView()
+                    case .checking:
+                        ProgressView()
+                            .controlSize(.small)
+                    case .upToDate:
+                        Text("You're up to date!")
+                            .foregroundStyle(.secondary)
+                            .font(.callout)
+                    case .available(let version, let url):
+                        Text("v\(version) available —")
+                            .font(.callout)
+                        Link("Download", destination: url)
+                            .font(.callout)
+                    case .error(let message):
+                        Text(message)
+                            .foregroundStyle(.red)
+                            .font(.callout)
+                            .lineLimit(1)
+                    }
                 }
             }
         }
+        .formStyle(.grouped)
         .padding()
         .onReceive(NotificationCenter.default.publisher(for: .checkForUpdates)) { _ in
             Task { await updateChecker.checkForUpdate() }
@@ -98,10 +103,13 @@ private struct KeyboardTab: View {
 private struct BrowsersTab: View {
     var body: some View {
         Form {
-            ForEach(SupportedBrowser.allCases) { browser in
-                BrowserToggleRow(browser: browser)
+            Section("Enable or disable browsers to show in the menu") {
+                ForEach(SupportedBrowser.allCases) { browser in
+                    BrowserToggleRow(browser: browser)
+                }
             }
         }
+        .formStyle(.grouped)
         .padding()
     }
 }

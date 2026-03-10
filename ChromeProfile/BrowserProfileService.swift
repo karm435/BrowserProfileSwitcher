@@ -66,21 +66,15 @@ final class BrowserProfileService {
     /// Whether the Accessibility API is currently available.
     var isAccessibilityGranted: Bool { AXIsProcessTrusted() }
 
-    /// Prompts for Accessibility permission once. Subsequent launches only log
-    /// a warning so the user isn't nagged with the system dialog every time.
+    /// Prompts for Accessibility permission whenever it is not granted.
+    /// The system dialog itself handles deduplication on modern macOS.
     func requestAccessibilityIfNeeded() {
         let trusted = AXIsProcessTrusted()
         logger.info("Accessibility trusted: \(trusted)")
         guard !trusted else { return }
 
-        let hasPrompted = UserDefaults.standard.bool(forKey: "hasPromptedAccessibility")
-        if !hasPrompted {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
-            UserDefaults.standard.set(true, forKey: "hasPromptedAccessibility")
-        } else {
-            logger.warning("Accessibility not granted — user must enable in System Settings → Privacy & Security → Accessibility")
-        }
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
     }
 
     func openProfile(_ profile: BrowserProfile) {
@@ -112,20 +106,40 @@ final class BrowserProfileService {
         // via the Accessibility API. This focuses an existing window for
         // that profile or opens a new one (native Chrome behaviour).
         logger.info("Switching to profile via Accessibility: \(profile.displayName)")
-        app.activate()
 
-        // Give the browser time to become the frontmost app so its menu bar
-        // is available to the Accessibility API.
-        Thread.sleep(forTimeInterval: 0.3)
-
-        if clickProfileMenuItem(pid: app.processIdentifier, profileName: profile.displayName) {
-            logger.info("Profile menu click succeeded")
+        // If accessibility isn't granted, prompt the user now and use the
+        // command-line fallback so the switch still works this time.
+        guard isAccessibilityGranted else {
+            logger.warning("Accessibility not granted — prompting and falling back to open -a")
+            requestAccessibilityIfNeeded()
+            launchViaOpen(profile: profile)
             return
         }
 
-        // Accessibility approach failed — open a new window as fallback.
-        logger.info("Profile menu click failed — opening new window")
-        openNewWindow(for: profile)
+        app.activate()
+
+        // Move the Accessibility work off the main thread to avoid blocking
+        // the UI (the AX helpers use synchronous sleeps while waiting for
+        // menus to populate).
+        let pid = app.processIdentifier
+        let displayName = profile.displayName
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+
+            // Give the browser time to become the frontmost app so its menu bar
+            // is available to the Accessibility API.
+            Thread.sleep(forTimeInterval: 0.3)
+
+            if self.clickProfileMenuItem(pid: pid, profileName: displayName) {
+                logger.info("Profile menu click succeeded")
+                return
+            }
+
+            // Accessibility approach failed — fall back to open -a which reuses
+            // the running browser instance rather than launching a new process.
+            logger.info("Profile menu click failed — falling back to open -a")
+            self.launchViaOpen(profile: profile)
+        }
     }
 
     // MARK: - Accessibility Menu Click
@@ -141,21 +155,24 @@ final class BrowserProfileService {
         let appElement = AXUIElementCreateApplication(pid)
 
         // --- Get the menu bar (retry a few times while the app activates) ---
-        var menuBarRef: CFTypeRef?
+        var menuBarValue: AXUIElement?
         for attempt in 1...3 {
-            if AXUIElementCopyAttributeValue(appElement, kAXMenuBarAttribute as CFString, &menuBarRef) == .success {
+            var ref: CFTypeRef?
+            if AXUIElementCopyAttributeValue(appElement, kAXMenuBarAttribute as CFString, &ref) == .success,
+               let element = ref as! AXUIElement? {
+                menuBarValue = element
                 break
             }
             logger.info("AX: menu bar not ready, retry \(attempt)/3")
             usleep(200_000) // 200 ms
         }
-        guard let menuBar = menuBarRef else {
+        guard let menuBar = menuBarValue else {
             logger.error("AX: could not get menu bar after retries")
             return false
         }
 
         var itemsRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(menuBar as! AXUIElement, kAXChildrenAttribute as CFString, &itemsRef) == .success,
+        guard AXUIElementCopyAttributeValue(menuBar, kAXChildrenAttribute as CFString, &itemsRef) == .success,
               let menuBarItems = itemsRef as? [AXUIElement] else {
             logger.error("AX: could not get menu bar items")
             return false
